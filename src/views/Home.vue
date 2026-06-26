@@ -3,18 +3,31 @@ import { computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 
 const auth = useAuthStore()
-const info = computed(() => auth.userInfo || {})
-const roleNames = computed(() =>
-  (info.value.roles || []).map((r) => r.name).join('、') || '无',
-)
+const realName = computed(() => auth.userInfo?.realName || '')
 </script>
 
 <template>
-  <el-card>
-    <h3>欢迎,{{ info.realName || '用户' }}</h3>
-    <p>账号:{{ info.username }}</p>
-    <p>部门:{{ info.departmentName || '未分配' }}</p>
-    <p>角色:{{ roleNames }}</p>
-    <p style="color: #999">地基已跑通,后续业务模块在此扩展。</p>
+  <el-card class="welcome">
+    <h2 class="welcome-title">
+      欢迎使用智能工单系统<template v-if="realName">,{{ realName }}</template>
+    </h2>
+    <p class="welcome-tip">请从左侧菜单选择功能开始操作。</p>
+    <p class="welcome-sub">账号详情可点击右上角头像查看。</p>
   </el-card>
 </template>
+
+<style scoped>
+.welcome-title {
+  margin: 0 0 12px;
+  font-size: 20px;
+}
+.welcome-tip {
+  margin: 0 0 6px;
+  color: #606266;
+}
+.welcome-sub {
+  margin: 0;
+  color: #909399;
+  font-size: 13px;
+}
+</style>
