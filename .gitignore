@@ -26,3 +26,7 @@ dist-ssr
 docs/*
 AGENTS.md
 CLAUDE.md
+
+# Playwright 测试产物(截图/快照)
+output/
+.playwright-cli/
