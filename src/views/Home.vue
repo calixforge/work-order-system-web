@@ -1,14 +1,31 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { CircleCheck, Document, List, Promotion, Stamp } from '@element-plus/icons-vue'
+import {
+  Avatar,
+  CircleCheck,
+  Document,
+  List,
+  OfficeBuilding,
+  Promotion,
+  Stamp,
+  Tickets,
+  UserFilled,
+} from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
 import { getWorkOrderStats } from '@/api/workorder'
+import { getAdminStats } from '@/api/admin'
 
 const auth = useAuthStore()
 const router = useRouter()
 const realName = computed(() => auth.userInfo?.realName || '')
+const isAdmin = computed(() => auth.hasRole('ADMIN'))
+// 是否拥有操作角色(决定要不要拉 /workorder/stats 待办统计)
+const hasTodoRole = computed(() =>
+  auth.hasAnyRole(['SUBMITTER', 'REVIEWER', 'DISPATCHER', 'HANDLER']),
+)
 const loading = ref(false)
+
 const stats = ref({
   pendingReview: 0,
   pendingAssign: 0,
@@ -16,56 +33,49 @@ const stats = ref({
   pendingAcceptance: 0,
   created: 0,
 })
+const adminStats = ref({
+  workorderTotal: 0,
+  pendingReview: 0,
+  pendingAssign: 0,
+  enabledUsers: 0,
+  disabledUsers: 0,
+  departmentCount: 0,
+})
 
-const cards = computed(() => [
-  {
-    title: '我的待审核',
-    value: stats.value.pendingReview || 0,
-    roles: ['REVIEWER'],
-    path: '/workorder/review',
-    type: 'warning',
-    icon: Stamp,
-  },
-  {
-    title: '待派单',
-    value: stats.value.pendingAssign || 0,
-    roles: ['DISPATCHER'],
-    path: '/workorder/dispatch',
-    type: 'primary',
-    icon: Promotion,
-  },
-  {
-    title: '我的待处理',
-    value: stats.value.assigned || 0,
-    roles: ['HANDLER'],
-    path: '/workorder/assigned',
-    type: 'success',
-    icon: List,
-  },
-  {
-    title: '我的待验收',
-    value: stats.value.pendingAcceptance || 0,
-    roles: ['SUBMITTER'],
-    path: '/workorder/created',
-    type: 'danger',
-    icon: CircleCheck,
-  },
-  {
-    title: '我创建的工单',
-    value: stats.value.created || 0,
-    roles: ['SUBMITTER'],
-    path: '/workorder/created',
-    type: 'info',
-    icon: Document,
-  },
-])
+// 操作角色的待办卡片(按当前用户角色过滤)
+const roleCards = computed(() =>
+  [
+    { title: '我的待审核', value: stats.value.pendingReview || 0, roles: ['REVIEWER'], path: '/workorder/review', type: 'warning', icon: Stamp },
+    { title: '待派单', value: stats.value.pendingAssign || 0, roles: ['DISPATCHER'], path: '/workorder/dispatch', type: 'primary', icon: Promotion },
+    { title: '我的待处理', value: stats.value.assigned || 0, roles: ['HANDLER'], path: '/workorder/assigned', type: 'success', icon: List },
+    { title: '我的待验收', value: stats.value.pendingAcceptance || 0, roles: ['SUBMITTER'], path: '/workorder/created', type: 'danger', icon: CircleCheck },
+    { title: '我创建的工单', value: stats.value.created || 0, roles: ['SUBMITTER'], path: '/workorder/created', type: 'info', icon: Document },
+  ].filter((card) => auth.hasAnyRole(card.roles)),
+)
 
-const visibleCards = computed(() => cards.value.filter((card) => auth.hasAnyRole(card.roles)))
+// 管理员的系统概览卡片(点击直达对应管理页)
+const adminCards = computed(() =>
+  isAdmin.value
+    ? [
+        { title: '全部工单', value: adminStats.value.workorderTotal || 0, path: '/admin/workorders', type: 'primary', icon: Tickets },
+        { title: '待审核', value: adminStats.value.pendingReview || 0, path: '/admin/workorders', type: 'warning', icon: Stamp },
+        { title: '待派单', value: adminStats.value.pendingAssign || 0, path: '/admin/workorders', type: 'warning', icon: Promotion },
+        { title: '启用用户', value: adminStats.value.enabledUsers || 0, path: '/admin/users', type: 'success', icon: UserFilled },
+        { title: '停用用户', value: adminStats.value.disabledUsers || 0, path: '/admin/users', type: 'info', icon: Avatar },
+        { title: '部门数', value: adminStats.value.departmentCount || 0, path: '/admin/departments', type: 'info', icon: OfficeBuilding },
+      ]
+    : [],
+)
+
+const visibleCards = computed(() => [...roleCards.value, ...adminCards.value])
 
 async function loadStats() {
   loading.value = true
   try {
-    stats.value = await getWorkOrderStats()
+    const tasks = []
+    if (hasTodoRole.value) tasks.push(getWorkOrderStats().then((d) => (stats.value = d)))
+    if (isAdmin.value) tasks.push(getAdminStats().then((d) => (adminStats.value = d)))
+    await Promise.all(tasks)
   } finally {
     loading.value = false
   }
@@ -83,7 +93,7 @@ onMounted(loadStats)
     <h2 class="welcome-title">
       欢迎使用智能工单系统<template v-if="realName">,{{ realName }}</template>
     </h2>
-    <p class="welcome-tip">这里汇总与你当前角色相关的工单待办,点击卡片可直达对应列表。</p>
+    <p class="welcome-tip">这里汇总与你相关的待办与统计,点击卡片可直达对应页面。</p>
 
     <div v-if="visibleCards.length" class="stats-grid">
       <button
