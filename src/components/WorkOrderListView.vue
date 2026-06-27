@@ -13,6 +13,8 @@ const props = defineProps({
   fetcher: { type: Function, required: true },
   // 是否显示状态筛选(review/dispatch 后端固定状态,无需此筛选)
   statusFilter: { type: Boolean, default: true },
+  // 入口上下文(created/review/dispatch/assigned/admin):详情页据此决定显示哪组动作
+  context: { type: String, default: '' },
 })
 
 const router = useRouter()
@@ -59,7 +61,7 @@ function onPageChange(p) {
 }
 
 function goDetail(id) {
-  router.push(`/workorder/${id}`)
+  router.push({ path: `/workorder/${id}`, query: props.context ? { from: props.context } : undefined })
 }
 
 // "2026-06-18T10:30:00" → "2026-06-18 10:30:00"

@@ -51,7 +51,7 @@ async function onSubmit(asSubmit) {
         priority: form.value.priority,
       })
       ElMessage.success('已保存')
-      router.push(`/workorder/${woId.value}`)
+      router.push({ path: `/workorder/${woId.value}`, query: { from: 'created' } })
     } else {
       await createWorkOrder({ ...form.value, submit: asSubmit })
       ElMessage.success(asSubmit ? '已提交审核' : '已保存草稿')

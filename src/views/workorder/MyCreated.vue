@@ -6,6 +6,6 @@ import { getMyCreated } from '@/api/workorder'
 <template>
   <el-card>
     <template #header>我创建的工单</template>
-    <WorkOrderListView :fetcher="getMyCreated" />
+    <WorkOrderListView :fetcher="getMyCreated" context="created" />
   </el-card>
 </template>
