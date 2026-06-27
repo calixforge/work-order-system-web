@@ -39,6 +39,36 @@ const routes = [
         meta: { title: '待我审核', roles: ['REVIEWER'] },
       },
       {
+        path: 'workorder/dispatch',
+        name: 'Dispatch',
+        component: () => import('@/views/workorder/Dispatch.vue'),
+        meta: { title: '待派单', roles: ['DISPATCHER'] },
+      },
+      {
+        path: 'workorder/assigned',
+        name: 'Assigned',
+        component: () => import('@/views/workorder/Assigned.vue'),
+        meta: { title: '我负责的', roles: ['HANDLER'] },
+      },
+      {
+        path: 'admin/workorders',
+        name: 'AdminWorkOrders',
+        component: () => import('@/views/admin/AdminWorkOrders.vue'),
+        meta: { title: '全部工单', roles: ['ADMIN'] },
+      },
+      {
+        path: 'admin/users',
+        name: 'UserManage',
+        component: () => import('@/views/admin/UserManage.vue'),
+        meta: { title: '用户管理', roles: ['ADMIN'] },
+      },
+      {
+        path: 'admin/departments',
+        name: 'DepartmentManage',
+        component: () => import('@/views/admin/DepartmentManage.vue'),
+        meta: { title: '部门管理', roles: ['ADMIN'] },
+      },
+      {
         path: 'workorder/:id/edit',
         name: 'WorkOrderEdit',
         component: () => import('@/views/workorder/WorkOrderCreate.vue'),

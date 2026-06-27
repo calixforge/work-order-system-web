@@ -15,6 +15,26 @@ export function getReview(params) {
   return request.get('/workorder/review', { params })
 }
 
+// 待派单工单(DISPATCHER,后端固定 PENDING_ASSIGN)
+export function getDispatch(params) {
+  return request.get('/workorder/dispatch', { params })
+}
+
+// 我负责的工单(HANDLER)
+export function getAssigned(params) {
+  return request.get('/workorder/assigned', { params })
+}
+
+// 首页工单统计(按当前用户角色返回相关待办数量)
+export function getWorkOrderStats() {
+  return request.get('/workorder/stats')
+}
+
+// 管理员查询全部工单
+export function getAllWorkOrders(params) {
+  return request.get('/workorder/list', { params })
+}
+
 // 审核:{ event: 'REVIEW_PASS' | 'REVIEW_REJECT', remark? }(驳回时 remark 必填)
 export function reviewWorkOrder(woId, data) {
   return request.put(`/workorder/${woId}/review`, data)
@@ -53,4 +73,19 @@ export function cancelWorkOrder(woId, data) {
 // 验收:{ event: 'ACCEPT' | 'REJECT_REWORK', remark? }(返工时 remark 必填)
 export function acceptanceWorkOrder(woId, data) {
   return request.put(`/workorder/${woId}/acceptance`, data)
+}
+
+// 派单:{ assigneeId, priority? }
+export function assignWorkOrder(woId, data) {
+  return request.put(`/workorder/${woId}/assign`, data)
+}
+
+// 转派:{ remark }
+export function transferWorkOrder(woId, data) {
+  return request.put(`/workorder/${woId}/transfer`, data)
+}
+
+// 接单人完成工单
+export function completeWorkOrder(woId) {
+  return request.put(`/workorder/${woId}/complete`)
 }
