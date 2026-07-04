@@ -89,3 +89,8 @@ export function transferWorkOrder(woId, data) {
 export function completeWorkOrder(woId, data) {
   return request.put(`/workorder/${woId}/complete`, data)
 }
+
+// 相似历史工单搜索:{ query }(≤100字;返回已验收关闭的工单及当时的解决方案)
+export function searchSimilar(data) {
+  return request.post('/workorder/similar', data)
+}

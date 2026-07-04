@@ -96,3 +96,6 @@ async function onSubmit(asSubmit) {
     </el-form>
   </el-card>
 </template>
+
+<style scoped>
+</style>

@@ -8,6 +8,7 @@ import { logout } from '@/api/user'
 import { MENU } from '@/config/menu'
 import AccountDialog from '@/components/AccountDialog.vue'
 import PasswordDialog from '@/components/PasswordDialog.vue'
+import WorkOrderAssistant from '@/components/WorkOrderAssistant.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -138,6 +139,9 @@ async function onLogout() {
         <PasswordDialog v-model="passwordVisible" />
       </el-main>
     </el-container>
+
+    <!-- 全局工单助手:登录后每页右下角悬浮 -->
+    <WorkOrderAssistant />
   </el-container>
 </template>
 
