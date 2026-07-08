@@ -9,7 +9,7 @@ import { getKbCatalog } from '@/api/kb'
 const route = useRoute()
 const router = useRouter()
 
-const loading = ref(false)
+const loading = ref(true)
 const catalog = ref([])
 const keyword = ref('')
 const activeSectionId = ref('')
@@ -119,7 +119,10 @@ onMounted(loadCatalog)
       </div>
 
       <el-scrollbar class="catalog-scroll">
-        <div v-if="filteredCatalog.length" class="catalog-list">
+        <div v-if="loading" class="catalog-loading">
+          <el-skeleton :rows="8" animated />
+        </div>
+        <div v-else-if="filteredCatalog.length" class="catalog-list">
           <section v-for="category in filteredCatalog" :key="category.category" class="catalog-group">
             <button type="button" class="category-title" @click="toggleCategory(category.category)">
               <el-icon class="category-arrow">
@@ -146,7 +149,10 @@ onMounted(loadCatalog)
     </aside>
 
     <main class="content-panel">
-      <template v-if="activeSection">
+      <div v-if="loading" class="content-loading">
+        <el-skeleton :rows="10" animated />
+      </div>
+      <template v-else-if="activeSection">
         <div class="content-head">
           <span class="section-category">{{ activeSection.category }}</span>
           <h1>{{ activeSection.title }}</h1>
@@ -203,6 +209,10 @@ onMounted(loadCatalog)
 
 .catalog-list {
   padding: 14px 12px 22px;
+}
+
+.catalog-loading {
+  padding: 18px 16px;
 }
 
 .catalog-group + .catalog-group {
@@ -283,6 +293,12 @@ onMounted(loadCatalog)
   overflow: auto;
   padding: 0;
   background: #ffffff;
+}
+
+.content-loading {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 56px 64px 20px;
 }
 
 .content-head {

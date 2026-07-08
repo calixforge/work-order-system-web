@@ -13,12 +13,14 @@ const loading = ref(false)
 const messages = ref([])
 const messageListRef = ref(null)
 let messageIdSeed = 0
+let autoScroll = true
 
 // 引用预览小框:点引用标记先看内容,多个资料可在弹窗顶部切换
 const previewVisible = ref(false)
 const previewCitations = ref([])
 const previewSections = ref([])
 const previewActiveIndex = ref(0)
+const previewLoading = ref(false)
 
 const previewCitation = computed(() => previewCitations.value[previewActiveIndex.value] || null)
 const previewSection = computed(() => previewSections.value[previewActiveIndex.value] || null)
@@ -97,6 +99,20 @@ function scrollToBottom() {
   })
 }
 
+function isNearBottom(el) {
+  return !el || el.scrollHeight - el.scrollTop - el.clientHeight < 80
+}
+
+function onMessageListScroll() {
+  autoScroll = isNearBottom(messageListRef.value)
+}
+
+function scrollToBottomIfNeeded() {
+  if (autoScroll) {
+    scrollToBottom()
+  }
+}
+
 async function onAsk() {
   const q = question.value.trim()
   if (!q || loading.value) return
@@ -116,13 +132,14 @@ async function onAsk() {
   messages.value.push(userMessage, assistantMessage)
   const assistantIndex = messages.value.length - 1
   question.value = ''
+  autoScroll = true
   scrollToBottom()
   loading.value = true
   try {
     await askAssistantStream(q, {
       onAnswer: (delta) => {
         messages.value[assistantIndex].content += delta
-        scrollToBottom()
+        scrollToBottomIfNeeded()
       },
       onSources: (items) => {
         messages.value[assistantIndex].sources = items || []
@@ -148,6 +165,7 @@ async function openCitations(selectedCitations) {
   previewCitations.value = selectedCitations
   previewSections.value = []
   previewActiveIndex.value = 0
+  previewLoading.value = true
   previewVisible.value = true
   try {
     const catalog = (await ensureCatalog()) || []
@@ -157,6 +175,8 @@ async function openCitations(selectedCitations) {
     )
   } catch {
     previewSections.value = selectedCitations.map(() => null)
+  } finally {
+    previewLoading.value = false
   }
 }
 
@@ -177,7 +197,7 @@ function openFullDoc() {
 
 <template>
   <div class="qa-chat">
-    <div ref="messageListRef" class="message-list">
+    <div ref="messageListRef" class="message-list" @scroll="onMessageListScroll">
       <div v-if="!messages.length" class="chat-empty">
         <img class="empty-avatar" src="/favicon.ico" alt="" />
         <div class="empty-title">工单助手</div>
@@ -266,8 +286,11 @@ function openFullDoc() {
         </button>
       </div>
       <div v-else-if="previewCitation" class="preview-title">{{ previewCitation.title }}</div>
-      <div v-if="renderedPreview" class="preview-body" v-html="renderedPreview" />
-      <el-empty v-else description="内容加载中或该条目不存在" :image-size="72" />
+      <div v-if="previewLoading" class="preview-loading">
+        <el-skeleton :rows="6" animated />
+      </div>
+      <div v-else-if="renderedPreview" class="preview-body" v-html="renderedPreview" />
+      <el-empty v-else description="该条目不存在或内容为空" :image-size="72" />
       <template #footer>
         <el-button @click="previewVisible = false">关闭</el-button>
         <el-button type="primary" :disabled="!previewCitation?.sectionId" @click="openFullDoc">
@@ -513,6 +536,18 @@ function openFullDoc() {
 .answer :deep(strong) {
   font-weight: 600;
 }
+.answer :deep(h1),
+.answer :deep(h2),
+.answer :deep(h3),
+.answer :deep(h4),
+.answer :deep(h5),
+.answer :deep(h6) {
+  margin: 0 0 8px;
+  color: #303846;
+  font-size: 14px;
+  line-height: 1.7;
+  font-weight: 600;
+}
 /* 行内引用入口:参考阿里云 AI 助手的 link badge,多资料时显示 +N */
 .answer :deep(.cite-badge) {
   display: inline-flex;
@@ -584,6 +619,9 @@ function openFullDoc() {
   color: #303846;
   font-size: 14px;
   font-weight: 600;
+}
+.preview-loading {
+  padding: 4px 0 8px;
 }
 .preview-body {
   max-height: 50vh;
